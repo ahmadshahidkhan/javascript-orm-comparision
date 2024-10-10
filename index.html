@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+    </script>
+  </head>
+  <body>
+    <div id="statistical_chart_div" style="width: 900px; height: 500px;"></div>
+
+    <script type="text/javascript">
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        // Create the data table for statistical performance.
+        var data = google.visualization.arrayToDataTable([
+          ['Test Case', 'Sequelize Mean', 'Sequelize Median', 'Sequelize SD',
+           'TypeORM Mean', 'TypeORM Median', 'TypeORM SD',
+           'Knex Mean', 'Knex Median', 'Knex SD',
+           'Prisma Mean', 'Prisma Median', 'Prisma SD',
+           'Objection Mean', 'Objection Median', 'Objection SD',
+           'MikroORM Mean', 'MikroORM Median', 'MikroORM SD',
+           'DrizzleORM Mean', 'DrizzleORM Median', 'DrizzleORM SD',
+           'Orchid-ORM Mean', 'Orchid-ORM Median', 'Orchid-ORM SD'],
+          ['Create 100 Articles', 2418, 2300, 500, 1176, 1150, 200, 722, 700, 150,
+           1834, 1800, 250, 793, 800, 100, 2672, 2600, 400, 1012, 1000, 50,
+           776, 750, 75],
+          ['Create 500 Articles', 6900, 6800, 400, 4458, 4400, 300, 6508, 6400, 250,
+           7239, 7100, 350, 3471, 3400, 200, 5102, 5000, 300, 3934, 3900, 200,
+           4020, 4000, 250],
+          ['Create 1000 Articles', 15647, 15500, 600, 11542, 11500, 500, 6673, 6600, 300,
+           12128, 12000, 700, 6285, 6200, 400, 9140, 9000, 500, 6583, 6500, 300,
+           8237, 8200, 600],
+          ['Retrieve 100 Articles', 5499, 5400, 500, 3287, 3200, 250, 5940, 5800, 300,
+           3200, 3100, 200, 4132, 4000, 400, 3259, 3200, 200, 733, 700, 50,
+           3670, 3600, 300],
+          ['Retrieve 500 Articles', 25672, 25500, 800, 4278, 4200, 300, 7738, 7700, 200,
+           10661, 10500, 500, 5062, 5000, 300, 4830, 4800, 200, 2074, 2000, 100,
+           4955, 4900, 250],
+          ['Retrieve 1000 Articles', 49383, 49000, 1000, 5738, 5700, 400, 7599, 7500, 300,
+           18683, 18500, 800, 6568, 6500, 400, 6077, 6000, 300, 3067, 3000, 200,
+           6388, 6300, 400]
+        ]);
+
+        // Set chart options
+        var options = {
+          title: 'Statistical Performance Summary',
+          hAxis: {title: 'Test Case'},
+          vAxis: {title: 'Time (ms)'},
+          legend: { position: 'top' },
+          seriesType: 'bars',
+          series: {5: {type: 'line'}, 11: {type: 'line'}, 17: {type: 'line'}} // Customize which series to show as lines
+        };
+
+        // Instantiate and draw our chart, passing in the options.
+        var chart = new google.visualization.ComboChart(document.getElementById('statistical_chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+  </body>
+</html>

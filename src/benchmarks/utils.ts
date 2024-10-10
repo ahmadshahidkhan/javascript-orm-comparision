@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import { orms } from '../orms/orms';
 import { OrmName } from '../orms/types';
 
-//export const ormNames = ['drizzleORM'] as OrmName[];
+// export const ormNames = ['sqlRaw'] as OrmName[];
 export const ormNames = Object.keys(orms) as OrmName[];
 
 export async function clearDb(db: Client, tables: string[]) {

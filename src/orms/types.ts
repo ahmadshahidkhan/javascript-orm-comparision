@@ -12,6 +12,7 @@ export type OrmName =
   | 'objection'
   | 'mikroorm'
   | 'drizzleORM'
+  | 'sqlRaw'
   | 'orchid-orm';
 
 export type OrmInterface = {

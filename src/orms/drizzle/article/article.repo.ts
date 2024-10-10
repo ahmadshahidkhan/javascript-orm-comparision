@@ -11,6 +11,7 @@ import { eq, inArray, notExists, sql } from 'drizzle-orm';
 import { userArticleFavorite } from './userArticleFavorite.modal';
 import { ArticleForResponse } from 'app/article/article.types';
 import { create } from 'domain';
+import { PgTransaction } from 'drizzle-orm/pg-core';
 
 type ArticlesQueryParams = {
   currentUser?: UserType;
@@ -101,23 +102,14 @@ const deleteUnusedTags = async () => {
 
 const createArticleTags = async ({
   articleDetail,
-  isNew,
+  trx,
   tagList,
 }: {
   articleDetail: any;
-  isNew?: boolean;
+  trx: any;
   tagList?: string[];
 }) => {
   if (!tagList?.length) return [];
-
-  if (!isNew) {
-    await db
-      .delete(articleTag)
-      .where(eq(articleTag.articleId, articleDetail.id))
-      .execute();
-    await deleteUnusedTags();
-  }
-
   // const existingTags = await db
   //   .select()
   //   .from(tag)
@@ -126,7 +118,7 @@ const createArticleTags = async ({
   // const existingTagNames = existingTags.map((t) => t.tag);
   // const newTags = tagList.filter((t) => !existingTagNames.includes(t));
 
-  const createdTags = await db
+  const createdTags = await trx
     .insert(tag)
     .values(tagList.map((name) => ({ tag: name })))
     .onConflictDoUpdate({
@@ -136,10 +128,13 @@ const createArticleTags = async ({
     .returning()
     .execute();
 
-  await db
+  await trx
     .insert(articleTag)
     .values(
-      createdTags.map((t) => ({ tagId: t.id, articleId: articleDetail.id })),
+      createdTags.map((t: any) => ({
+        tagId: t.id,
+        articleId: articleDetail.id,
+      })),
     )
     .execute();
 };
@@ -177,7 +172,7 @@ export const articleRepo: ArticleRepo = {
 
       await createArticleTags({
         articleDetail,
-        isNew: true,
+        trx,
         tagList: params.tagList,
       });
 

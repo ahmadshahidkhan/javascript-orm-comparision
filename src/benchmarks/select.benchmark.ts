@@ -12,6 +12,8 @@ import {
   getMs,
   ormNames,
 } from './utils';
+import { mean, std, median } from 'mathjs'; // Ensure you have mathjs installed
+import os from 'os';
 
 const articlesToLoad = 1000;
 const requestsPerORM = 300;
@@ -44,6 +46,8 @@ const tables = ['articleTag', 'userArticleFavorite', 'article', 'tag', 'user'];
       await verifyResponses();
       console.log('Measuring ORMs');
       await measureORMs();
+      // await measureORMsConcurrently();
+      // await measureORMsConcurrentlyV2();
     } finally {
       console.log('Disconnecting all ORMs');
       await disconnectAllORMs();
@@ -172,18 +176,168 @@ async function verifyResponses() {
 }
 
 async function measureORMs() {
+  const results: { [key in OrmName]: number[] } = {
+    sequelize: [],
+    typeorm: [],
+    knex: [],
+    prisma: [],
+    objection: [],
+    mikroorm: [],
+    drizzleORM: [],
+    sqlRaw: [],
+    'orchid-orm': [],
+  };
+
   for (const ormName of ormNames) {
-    const start = getMs();
+    const timings = [];
+    const totalStart = getMs();
 
     for (let i = 0; i < requestsPerORM; i++) {
+      const start = getMs();
       await performRequest(ormName);
+      const end = getMs();
+      timings.push(end - start);
     }
 
-    const end = getMs();
+    const totalEnd = getMs();
 
-    console.log(`${ormName}: ${formatMs(end - start)}`);
+    results[ormName] = timings;
+    console.log(`${ormName}: ${formatMs(totalEnd - totalStart)}`);
+  }
+
+  // Calculate and print statistical summary
+  for (const ormName of ormNames) {
+    const timings = results[ormName];
+    const avg = mean(timings);
+    const stdDev = std(timings, 'uncorrected');
+    const med = median(timings);
+
+    console.log(
+      `${ormName} - Average: ${formatMs(avg)}, Std Dev: ${formatMs(
+        stdDev as number,
+      )}, Median: ${formatMs(med)}`,
+    );
   }
 }
+
+async function measureORMsConcurrently() {
+  const results: { [key in OrmName]: number[] } = {
+    sequelize: [],
+    typeorm: [],
+    knex: [],
+    prisma: [],
+    objection: [],
+    mikroorm: [],
+    drizzleORM: [],
+    sqlRaw: [],
+    'orchid-orm': [],
+  };
+
+  for (const ormName of ormNames) {
+    const timings: number[] = [];
+    const totalStart = getMs();
+
+    const promises = Array.from({ length: requestsPerORM }, () => {
+      const start = getMs();
+      return performRequest(ormName).then(() => {
+        const end = getMs();
+        timings.push(end - start);
+      });
+    });
+    await Promise.all(promises);
+
+    const totalEnd = getMs();
+
+    results[ormName] = timings;
+    console.log(`${ormName}: ${formatMs(totalEnd - totalStart)}`);
+  }
+
+  // Calculate and print statistical summary
+  for (const ormName of ormNames) {
+    const timings = results[ormName];
+    const avg = mean(timings);
+    const stdDev = std(timings, 'uncorrected');
+    const med = median(timings);
+
+    console.log(
+      `${ormName} - Average: ${formatMs(avg)}, Std Dev: ${formatMs(
+        stdDev as number,
+      )}, Median: ${formatMs(med)}`,
+    );
+  }
+}
+
+async function measureORMsConcurrentlyV2() {
+  const maxConcurrentRequests = 2000; // Adjust this based on your needs
+  const step = 50; // Increase the load by this step each time
+
+  for (const ormName of ormNames) {
+    for (
+      let concurrentRequests = step;
+      concurrentRequests <= maxConcurrentRequests;
+      concurrentRequests += step
+    ) {
+      const { totalTime, errors } = await loadTestORM(
+        ormName,
+        concurrentRequests,
+      );
+      if (errors.length > 0) {
+        console.log(
+          `Reached limit for ${ormName} at ${
+            concurrentRequests - step
+          } concurrent requests`,
+        );
+        break;
+      }
+    }
+  }
+}
+
+async function loadTestORM(ormName: OrmName, concurrentRequests: number) {
+  const timings: number[] = [];
+  const errors: any[] = [];
+  const totalStart = getMs();
+
+  const promises = Array.from({ length: concurrentRequests }, () => {
+    const start = getMs();
+    return performRequest(ormName)
+      .then(() => {
+        const end = getMs();
+        timings.push(end - start);
+      })
+      .catch((error) => {
+        errors.push(error);
+      });
+  });
+
+  await Promise.all(promises);
+
+  const totalEnd = getMs();
+  const totalTime = totalEnd - totalStart;
+
+  console.log(`${ormName} with ${concurrentRequests} concurrent requests:`);
+  console.log(`Total time: ${formatMs(totalTime)}`);
+  console.log(`Number of errors: ${errors.length}`);
+  if (errors.length > 0) {
+    console.log(`Errors:`, errors);
+  }
+
+  return { totalTime, errors };
+}
+
+// async function measureORMs() {
+//   for (const ormName of ormNames) {
+//     const start = getMs();
+
+//     for (let i = 0; i < requestsPerORM; i++) {
+//       await performRequest(ormName);
+//     }
+
+//     const end = getMs();
+
+//     console.log(`${ormName}: ${formatMs(end - start)}`);
+//   }
+// }
 
 async function getResponse(ormName: OrmName) {
   const { body } = await performRequest(ormName);

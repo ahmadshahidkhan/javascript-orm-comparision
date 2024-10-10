@@ -1,7 +1,6 @@
-# ORMs Overview with Drizzle ORM Support
+# ORMs overview
 
-This project is a fork of [romeerez/orms-overview](https://github.com/romeerez/orms-overview/tree/master) with additional support for Drizzle ORM. The purpose of this project is to implement the [real world API](https://github.com/gothinkster/realworld) using different Node.js ORMs and compare their performance and usability.
-
+Implement [real world API](https://github.com/gothinkster/realworld) with different node.js ORMs to compare them.
 
 Code for ORMs you can find in `src/orms`, for benchmark `src/benchmarks`, tests are in `src/tests`.
 
@@ -31,7 +30,3 @@ npm run test:sequelize
 npm run bench:select # measure selecting articles
 npm run bench:insert # measure inserting articles
 ```
-
-
-# Additional Information
-This project aims to provide a comprehensive comparison of various Node.js ORMs, including Sequelize, TypeORM, and now Drizzle ORM. By running the provided benchmarks and tests, you can evaluate the performance and ease of use of each ORM in a real-world scenario.
